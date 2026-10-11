@@ -22,6 +22,8 @@ from contextlib import contextmanager
 from functools import lru_cache
 from typing import Any, Iterator
 
+from mtplx import paths
+
 
 PROFILE_LABELS = {
     "performance": "Performance",
@@ -113,7 +115,7 @@ def _version(path: str) -> dict[str, Any]:
     return _run_probe([path, "--help"])
 
 
-MTPLX_THERMALFORGE_DIR = os.path.expanduser("~/.mtplx/bin")
+MTPLX_THERMALFORGE_DIR = str(paths.data_dir() / "bin")
 MTPLX_THERMALFORGE_PATH = os.path.join(MTPLX_THERMALFORGE_DIR, "thermalforge")
 BUNDLED_THERMALFORGE_ENV = "MTPLX_BUNDLED_THERMALFORGE"
 
@@ -121,7 +123,7 @@ BUNDLED_THERMALFORGE_ENV = "MTPLX_BUNDLED_THERMALFORGE"
 def _find_thermalforge() -> str | None:
     """Locate a ``thermalforge`` binary in MTPLX's preferred order.
 
-    1. ``~/.mtplx/bin/thermalforge`` — the copy MTPLX owns and installs. We
+    1. ``$XDG_DATA_HOME/mtplx/bin/thermalforge`` — the copy MTPLX owns and installs. We
        prefer this so that anything external (an upstream installer with
        broken cwd handling, an OS update, ``brew uninstall``, etc.)
        cannot break MTPLX's fan control.
@@ -1041,7 +1043,7 @@ def install_passwordless_sudoers_rule(
 
     # Grant exactly the binary the fan commands run. `mtplx max --grant-sudo`
     # used to default to the PATH copy while fan control ran MTPLX's own
-    # ~/.mtplx/bin/thermalforge, so the grant never applied.
+    # $XDG_DATA_HOME/mtplx/bin/thermalforge, so the grant never applied.
     if binary_path is None:
         binary_path = _find_thermalforge()
         if binary_path is None:
@@ -1166,7 +1168,7 @@ import secrets  # noqa: E402
 import signal  # noqa: E402
 from pathlib import Path  # noqa: E402
 
-MAX_MARKER_FILE = Path("~/.mtplx/max-active.json").expanduser()
+MAX_MARKER_FILE = paths.state_dir() / "max-active.json"
 
 
 @contextmanager
@@ -2308,7 +2310,7 @@ def run_command_with_profile(
 # build; Homebrew remains an explicit diagnostic/manual method.
 
 THERMALFORGE_GIT_URL = "https://github.com/ProducerGuy/ThermalForge.git"
-THERMALFORGE_BUILD_DIR = "~/.mtplx/build/ThermalForge"
+THERMALFORGE_BUILD_DIR = str(paths.data_dir() / "build" / "ThermalForge")
 
 INSTALL_PREREQ_HINTS = {
     "swift": (
@@ -2364,7 +2366,7 @@ def install_thermal_control(
 
     ``method`` selects the install path:
       ``"auto"``    — use the app-bundled helper when present, otherwise
-                      build from source into ``~/.mtplx/bin`` (default).
+                      build from source into ``$XDG_DATA_HOME/mtplx/bin`` (default).
       ``"source"``  — git clone + ./setup.sh (uses Xcode CLI tools).
       ``"homebrew"`` — brew install ProducerGuy/tap/thermalforge + sudo daemon.
 
@@ -2388,7 +2390,7 @@ def install_thermal_control(
     # mid-build (missing ``Scripts/generate-icon.swift`` in the formula's
     # source archive, May 2026) AND, when it does succeed, installs into
     # ``/usr/local/bin/`` which we can't keep stable. Source build to
-    # ``~/.mtplx/bin`` is the only path we trust.
+    # ``$XDG_DATA_HOME/mtplx/bin`` is the only path we trust.
     return _install_from_source(install_daemon=install_daemon, streaming=streaming)
 
 
@@ -2527,7 +2529,7 @@ def _install_from_source(
     streaming: bool,
 ) -> dict[str, Any]:
     """Build ThermalForge from source and install ONLY into MTPLX's private
-    ``~/.mtplx/bin`` directory.
+    ``$XDG_DATA_HOME/mtplx/bin`` directory.
 
     Why we don't run upstream's ``setup.sh`` or ``thermalforge install``:
     the upstream installer copies a binary to ``/usr/local/bin/`` and writes
@@ -2538,7 +2540,7 @@ def _install_from_source(
     CLI is gone — leaving the user with no fan control and no obvious
     recovery path. Witnessed in the wild May 2026.
 
-    By installing under ``~/.mtplx/bin`` and using passwordless sudo
+    By installing under ``$XDG_DATA_HOME/mtplx/bin`` and using passwordless sudo
     targeting that exact path, MTPLX's fan control is owned end-to-end by
     MTPLX. Nothing outside ``mtplx max --install`` can break it.
     """

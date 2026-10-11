@@ -28,7 +28,7 @@ A restore only counts once the fan rows report the automatic curve again
 (#201); the Max marker is cleared on a verified restore only, so a wedged
 daemon that answers "ok" without touching the fans leaves the marker for
 the next ``mtplx start`` to recover from. Because stdio is detached, the
-outcome is appended to ``~/.mtplx/logs/thermal-sidecar.log``.
+outcome is appended to ``$XDG_STATE_HOME/mtplx/logs/thermal-sidecar.log``.
 """
 
 from __future__ import annotations
@@ -39,6 +39,7 @@ import subprocess
 import sys
 import time
 
+from mtplx import paths
 from mtplx.thermal import (
     _daemon_socket_send,
     _max_marker_lock,
@@ -53,7 +54,7 @@ SUDO_AUTO_TIMEOUT_S = 20.0
 
 
 def _log_path() -> str:
-    return os.path.expanduser("~/.mtplx/logs/thermal-sidecar.log")
+    return str(paths.state_dir() / "logs" / "thermal-sidecar.log")
 
 
 def _log(message: str) -> None:

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
+from mtplx import paths
 from mtplx.hardware import classify_apple_silicon_generation, detect_apple_silicon
 from mtplx.model_catalog import (
     LEGACY_TIER,
@@ -143,54 +144,56 @@ OPTIMIZED_SPEED_LABEL = QWEN38_OPTIMIZED_SPEED_LABEL
 OPTIMIZED_SPEED_DESCRIPTION = QWEN38_OPTIMIZED_SPEED_DESCRIPTION
 OPTIMIZED_QUALITY_LABEL = "Qwen3.6 27B MTPLX Optimized Quality"
 OPTIMIZED_QUALITY_DESCRIPTION = "Flat8 target with INT8 MTP sidecar"
+_MODELS = paths.data_dir() / "models"
+_HF_UPLOAD = paths.data_dir() / "hf-upload"
 _QWEN38_BARE_SPEED_LOCAL_CANDIDATES = (
-    "~/.mtplx/models/Youssofal--Qwen3.8-27B-MTPLX-Bare-Speed",
+    f"{_MODELS}/Youssofal--Qwen3.8-27B-MTPLX-Bare-Speed",
     # Forge-local drop-day build (forge writes the branded name directly).
-    "~/.mtplx/models/Qwen3.8-27B-MTPLX-Bare-Speed",
+    f"{_MODELS}/Qwen3.8-27B-MTPLX-Bare-Speed",
 )
 _QWEN38_OPTIMIZED_SPEED_LOCAL_CANDIDATES = (
-    "~/.mtplx/models/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Speed",
-    "~/.mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed",
+    f"{_MODELS}/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Speed",
+    f"{_MODELS}/Qwen3.8-27B-MTPLX-Optimized-Speed",
 )
 _QWEN38_OPTIMIZED_QUALITY_LOCAL_CANDIDATES = (
-    "~/.mtplx/models/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Quality",
-    "~/.mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Quality",
+    f"{_MODELS}/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Quality",
+    f"{_MODELS}/Qwen3.8-27B-MTPLX-Optimized-Quality",
 )
 _QWEN38_BARE_SPEED_FP16_LOCAL_CANDIDATES = (
-    "~/.mtplx/models/Youssofal--Qwen3.8-27B-MTPLX-Bare-Speed-FP16",
-    "~/.mtplx/models/Qwen3.8-27B-MTPLX-Bare-Speed-FP16",
+    f"{_MODELS}/Youssofal--Qwen3.8-27B-MTPLX-Bare-Speed-FP16",
+    f"{_MODELS}/Qwen3.8-27B-MTPLX-Bare-Speed-FP16",
 )
 _QWEN38_OPTIMIZED_SPEED_FP16_LOCAL_CANDIDATES = (
-    "~/.mtplx/models/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Speed-FP16",
-    "~/.mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed-FP16",
+    f"{_MODELS}/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Speed-FP16",
+    f"{_MODELS}/Qwen3.8-27B-MTPLX-Optimized-Speed-FP16",
 )
 _QWEN38_OPTIMIZED_QUALITY_FP16_LOCAL_CANDIDATES = (
-    "~/.mtplx/models/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Quality-FP16",
-    "~/.mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Quality-FP16",
+    f"{_MODELS}/Youssofal--Qwen3.8-27B-MTPLX-Optimized-Quality-FP16",
+    f"{_MODELS}/Qwen3.8-27B-MTPLX-Optimized-Quality-FP16",
 )
 _OPTIMIZED_SPEED_V2_LOCAL_CANDIDATES = (
-    "~/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Speed-V2",
+    f"{_MODELS}/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Speed-V2",
     "~/Documents/MTPLX/models/Qwen3.6-27B-MTPLX-Optimized-Speed-V2",
     "~/Documents/MTPLX/hf-staging/Qwen3.6-27B-MTPLX-Optimized-Speed-V2",
 )
 _OPTIMIZED_SPEED_V1_LOCAL_CANDIDATES = (
     "~/Documents/MTPLX/models/Qwen3.6-27B-MTPLX-Optimized-Speed",
-    "~/.mtplx/hf-upload/Qwen3.6-27B-MTPLX-Optimized-Speed",
-    "~/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Speed",
+    f"{_HF_UPLOAD}/Qwen3.6-27B-MTPLX-Optimized-Speed",
+    f"{_MODELS}/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Speed",
     "~/Documents/MTPLX/hf-staging/Qwen3.6-27B-MTPLX-Optimized-Speed",
 )
 _OPTIMIZED_QUALITY_LOCAL_CANDIDATES = (
     "~/Documents/MTPLX/hf-staging/Qwen3.6-27B-MTPLX-Optimized-Quality",
-    "~/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality",
+    f"{_MODELS}/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality",
 )
 _OPTIMIZED_QUALITY_FP16_LOCAL_CANDIDATES = (
     "~/Documents/MTPLX/hf-staging/Qwen3.6-27B-MTPLX-Optimized-Quality-FP16",
-    "~/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality-FP16",
+    f"{_MODELS}/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality-FP16",
 )
 _OPTIMIZED_35B_SPEED_LOCAL_CANDIDATES = (
     "~/Documents/MTPLX/models/Qwen3.6-35B-A3B-MTPLX-Optimized-Speed",
     "~/Documents/MTPLX/models/Qwen3.6-35B-A3B-MTPLX-Official4-CyanKiwiMTP-CleanRecipe",
-    "~/.mtplx/models/Youssofal--Qwen3.6-35B-A3B-MTPLX-Optimized-Speed",
+    f"{_MODELS}/Youssofal--Qwen3.6-35B-A3B-MTPLX-Optimized-Speed",
 )
 class DefaultModelUnavailable(RuntimeError):
     """No verified default model can run on this machine.

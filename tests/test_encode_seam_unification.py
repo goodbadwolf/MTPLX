@@ -17,6 +17,7 @@ a canon-miss request can no longer regress the committed session
 
 from __future__ import annotations
 
+import os
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -26,7 +27,7 @@ import pytest
 from mtplx.engine_session import EngineSession
 from mtplx.server import openai as oa
 
-MODEL_DIR = Path.home() / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
+MODEL_DIR = Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
 
 pytestmark = pytest.mark.skipif(
     not (MODEL_DIR / "chat_template.jinja").exists(),

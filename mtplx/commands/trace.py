@@ -3,8 +3,8 @@
 Joins three local data sources into one timeline so a slow or misbehaving run
 can be diagnosed in seconds instead of ad-hoc scripts:
 
-  1. Serve request receipts   ~/.mtplx/logs/request-log-<port>.jsonl
-  2. Flight-recorder events   ~/.mtplx/metrics/flight-<port>-<day>.jsonl
+  1. Serve request receipts   $XDG_STATE_HOME/mtplx/logs/request-log-<port>.jsonl
+  2. Flight-recorder events   $XDG_STATE_HOME/mtplx/metrics/flight-<port>-<day>.jsonl
      (per-second samples: ev "s"; lifecycle: "begin"/"prefill"/"end"/"pc")
   3. OpenCode's database      ~/.local/share/opencode/opencode.db
 
@@ -27,9 +27,10 @@ import urllib.request
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
+from mtplx import paths
 
-LOGS_DIR = Path(os.path.expanduser("~/.mtplx/logs"))
-METRICS_DIR = Path(os.path.expanduser("~/.mtplx/metrics"))
+LOGS_DIR = paths.state_dir() / "logs"
+METRICS_DIR = paths.state_dir() / "metrics"
 OPENCODE_DB = Path(os.path.expanduser("~/.local/share/opencode/opencode.db"))
 AUTOPSY_DIR = METRICS_DIR / "autopsy"
 
@@ -625,7 +626,7 @@ def _turn_row(turn: dict) -> dict:
 def _cmd_session(args: argparse.Namespace) -> int:
     port = _source_port(args)
     if port is None:
-        print("no request logs found under ~/.mtplx/logs", file=sys.stderr)
+        print("no request logs found under $XDG_STATE_HOME/mtplx/logs", file=sys.stderr)
         return 1
     receipts = _load_receipts(port, path=getattr(args, "request_log", None))
     flight = _load_flight(port, path=getattr(args, "flight_log", None))
@@ -747,7 +748,7 @@ _RECEIPT_GROUPS: list[tuple[str, list[str]]] = [
 def _cmd_request(args: argparse.Namespace) -> int:
     port = _source_port(args)
     if port is None:
-        print("no request logs found under ~/.mtplx/logs", file=sys.stderr)
+        print("no request logs found under $XDG_STATE_HOME/mtplx/logs", file=sys.stderr)
         return 1
     receipts = _load_receipts(port, path=getattr(args, "request_log", None))
     if not receipts:

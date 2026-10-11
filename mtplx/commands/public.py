@@ -31,6 +31,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Callable
 
+from mtplx import paths
 from mtplx.artifacts import inspect_model
 from mtplx.benchmarks.validators.basic import (
     ValidationResult,
@@ -252,7 +253,7 @@ TUNE_DEFAULT_SUITE = "cold-long-code-192"
 TUNE_DEFAULT_MAX_TOKENS = 512
 TUNE_DEFAULT_LIMIT = 1
 TUNE_DEFAULT_SEED = 0
-TUNE_STATE_PATH = Path("~/.mtplx/tuning.json").expanduser()
+TUNE_STATE_PATH = paths.state_dir() / "tuning.json"
 TUNE_TELEMETRY_SAMPLE_INTERVAL_S = 0.75
 TUNE_POWERMETRICS_SAMPLE_INTERVAL_S = 1.5
 TUNE_CANDIDATE_SETTLE_S = 5.0
@@ -4298,7 +4299,9 @@ def _tune_model_source_notes(args: Any, *, runtime_model: str) -> list[str]:
     if _same_model_ref(runtime_model, default_model):
         return []
     config_path = (
-        config.get("path") if isinstance(config, dict) else "~/.mtplx/config.toml"
+        config.get("path")
+        if isinstance(config, dict)
+        else str(paths.config_dir() / "config.toml")
     )
     return [
         f"[tune] using configured model from {config_path}: {runtime_model}",
@@ -4786,7 +4789,7 @@ def _parse_powermetrics_text(text: str) -> dict[str, Any]:
 
 
 def _thermalforge_binary() -> str | None:
-    owned = Path("~/.mtplx/bin/thermalforge").expanduser()
+    owned = paths.data_dir() / "bin" / "thermalforge"
     if owned.exists():
         return str(owned)
     return shutil.which("thermalforge")
@@ -9538,7 +9541,7 @@ def _resolve_runtime_options_on_args(
 ) -> int | None:
     # --api-key-file pointing at a missing path creates the file with a fresh
     # key instead of erroring: the non-localhost refusal below suggests
-    # `--api-key-file ~/.mtplx/api-key` as the recovery command, and that
+    # `--api-key-file $XDG_CONFIG_HOME/mtplx/api-key` as the recovery command, and that
     # suggestion must work on a machine that has never had a key. The key is
     # printed once, at generation — it never appears again on later launches,
     # and the file path stays the durable copy. Only server entrypoints get
@@ -9618,9 +9621,10 @@ def cmd_serve_public(args: Any) -> int:
             )
             print(f"host: {getattr(args, 'host', None)}")
             server_command = _server_command_name(args)
+            api_key_file = paths.config_dir() / "api-key"
             print(f"try: mtplx {server_command} --host 127.0.0.1")
             print(
-                f"try: mtplx {server_command} --host 0.0.0.0 --api-key-file ~/.mtplx/api-key"
+                f"try: mtplx {server_command} --host 0.0.0.0 --api-key-file {api_key_file}"
             )
         return 2
     cli_flags = getattr(args, "_cli_flags", set()) or set()
@@ -11177,7 +11181,7 @@ def _quickstart_console() -> Any:
         return None
 
 
-CHAT_HISTORY_PATH = Path("~/.mtplx/history").expanduser()
+CHAT_HISTORY_PATH = paths.state_dir() / "history"
 CHAT_HISTORY_LENGTH = 1000
 
 # True once ``readline`` is driving the chat REPL's ``input()`` calls. It

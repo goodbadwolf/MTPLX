@@ -3,19 +3,49 @@
 Without these guards the suite is machine-dependent: a daemon left running
 by the macOS app would make ``mtplx start`` flows offer attach prompts, the
 real ``~/Library/Application Support/MTPLX/settings.json`` would inject
-"same as the app" options, and the real ``~/.mtplx/models`` cache would
-change picker numbering. Tests that exercise those features explicitly
-override these variables with their own fixtures.
+"same as the app" options, and the real models cache would change picker
+numbering. HOME and the XDG roots point at scratch directories, so nothing a
+test writes lands in the developer's config, state, cache or data folders.
+Tests that exercise those features explicitly override these variables with
+their own fixtures.
 """
 
 from __future__ import annotations
 
 import os
+import shutil
+import tempfile
 
 import pytest
 
+_XDG_LEAVES = {
+    "XDG_CONFIG_HOME": "config",
+    "XDG_STATE_HOME": "state",
+    "XDG_CACHE_HOME": "cache",
+    "XDG_DATA_HOME": "data",
+}
+
+
+def _point_home_at(root) -> dict[str, str]:
+    root = str(root)
+    env = {"HOME": os.path.join(root, "home")}
+    for name, leaf in _XDG_LEAVES.items():
+        env[name] = os.path.join(root, "xdg", leaf)
+    return env
+
 
 def pytest_configure(config):
+    # Module-level defaults (config path, session bank, trace dirs) are read
+    # at import, which happens at collection, before any fixture runs. The
+    # scratch home has to exist by then.
+    # Tests that read a real asset (a model pack, a chat template) from the
+    # developer's home find it through this variable.
+    os.environ.setdefault("MTPLX_SUITE_REAL_HOME", os.environ.get("HOME", ""))
+    session_home = tempfile.mkdtemp(prefix="mtplx-suite-home-")
+    config._mtplx_session_home = session_home
+    os.environ.update(_point_home_at(session_home))
+    os.makedirs(os.environ["HOME"], exist_ok=True)
+    os.environ.pop("MTPLX_HOME", None)
     # A leaked MTPLX_UPDATE_GOLDENS=1 turns every golden test into a
     # write-then-return no-op and the suite reports green with zero
     # verification. Regeneration is a deliberate local act: run it as
@@ -30,19 +60,28 @@ def pytest_configure(config):
         )
 
 
+def pytest_unconfigure(config):
+    shutil.rmtree(getattr(config, "_mtplx_session_home", ""), ignore_errors=True)
+
+
 @pytest.fixture(autouse=True)
 def _hermetic_mtplx_state(monkeypatch, tmp_path_factory):
     isolated = tmp_path_factory.mktemp("hermetic-mtplx")
+    # A test that needs another home sets its own after this fixture runs.
+    for name, value in _point_home_at(isolated).items():
+        monkeypatch.setenv(name, value)
+    os.makedirs(os.environ["HOME"], exist_ok=True)
+    monkeypatch.delenv("MTPLX_HOME", raising=False)
     monkeypatch.setenv("MTPLX_START_ATTACH_PROBE", "off")
     monkeypatch.setenv(
         "MTPLX_APP_SETTINGS_PATH", str(isolated / "app-settings.json")
     )
     monkeypatch.setenv("MTPLX_MODEL_DIR", str(isolated / "models"))
-    # `mtplx start` saves its setup to ~/.mtplx/quickstart.json and offers it
+    # `mtplx start` saves its setup to quickstart.json in the state dir and offers it
     # again on the next start; a test that reaches save_state without its own
     # path must not rewrite the developer's.
     monkeypatch.setenv("MTPLX_QUICKSTART_STATE", str(isolated / "quickstart.json"))
-    # A real ~/.mtplx/config.toml outranks MTPLX_MODEL_DIR: its `model` changed
+    # A real config.toml in the config dir outranks MTPLX_MODEL_DIR: its `model` changed
     # the default-model and bench dry runs, and its `model_dir` sent forge
     # builds into the user's real model cache. Tests that exercise the config
     # set their own MTPLX_CONFIG.

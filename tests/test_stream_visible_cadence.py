@@ -19,6 +19,7 @@ gate the release policy itself, model-free, so the bug class cannot return:
 
 from __future__ import annotations
 
+import os
 import random
 from pathlib import Path
 
@@ -204,7 +205,7 @@ def test_split_tool_call_marker_survives_streaming() -> None:
         )
 
 
-_QWEN_PACK = Path.home() / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
+_QWEN_PACK = Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
 
 
 @pytest.mark.skipif(

@@ -9,6 +9,7 @@ off switch and observability.
 
 from __future__ import annotations
 
+import os
 import json
 import threading
 import weakref
@@ -484,7 +485,7 @@ def test_unsegmented_encode_does_not_touch_the_memo(memo):
 # --- parity with the real tokenizer and chat template ---------------------
 
 MODEL_DIR = (
-    Path.home() / ".mtplx/models/Youssofal--Qwen3.6-35B-A3B-MTPLX-Optimized-Balance"
+    Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx/models/Youssofal--Qwen3.6-35B-A3B-MTPLX-Optimized-Balance"
 )
 needs_real_tokenizer = pytest.mark.skipif(
     not (MODEL_DIR / "tokenizer.json").exists(),

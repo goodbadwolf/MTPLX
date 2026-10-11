@@ -54,6 +54,7 @@ from threading import Condition, Event, Lock, Thread, Timer
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import numpy as np
+from mtplx import paths
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -16684,7 +16685,7 @@ def _request_log_path(state: "ServerState") -> str | None:
     # the 15-entry RAM ring; this keeps the durable trail by default.
     try:
         port = int(getattr(state.args, "port", 0) or 0)
-        log_dir = os.path.join(os.path.expanduser("~"), ".mtplx", "logs")
+        log_dir = str(paths.state_dir() / "logs")
         os.makedirs(log_dir, exist_ok=True)
         return os.path.join(log_dir, f"request-log-{port}.jsonl")
     except Exception:
@@ -19540,7 +19541,7 @@ def _mtplx_current_settings(state: "ServerState") -> dict[str, Any]:
         "prefill_chunk_tokens_default": _served_prefill_chunk_auto(args),
         "ssd_session_cache": str(getattr(args, "ssd_session_cache", "off") or "off"),
         "ssd_session_cache_dir": str(
-            getattr(args, "ssd_session_cache_dir", "~/.mtplx/session-bank")
+            getattr(args, "ssd_session_cache_dir", str(paths.cache_dir() / "session-bank"))
         ),
         "ssd_session_cache_max_size": str(
             getattr(args, "ssd_session_cache_max_size", "auto")
@@ -37015,7 +37016,7 @@ def create_app(state: ServerState) -> FastAPI:
         env["MTPLX_APP_LAUNCH_ID"] = app_launch_id
         env["MTPLX_AIME_PARENT_PID"] = str(os.getpid())
         base_url = f"http://127.0.0.1:{port}"
-        log_dir = Path.home() / ".mtplx" / "benchmarks" / "aime" / "worker-logs"
+        log_dir = paths.state_dir() / "benchmarks" / "aime" / "worker-logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         log_path = log_dir / f"{app_launch_id}.log"
         log_file = log_path.open("ab", buffering=0)
@@ -37259,7 +37260,7 @@ def create_app(state: ServerState) -> FastAPI:
     def aime_history(limit: int = 5) -> dict[str, Any]:
         """Return summary lines of the most recent N AIME runs.
 
-        Reads JSONL files in `~/.mtplx/benchmarks/aime/` and returns the
+        Reads JSONL files in `$XDG_STATE_HOME/mtplx/benchmarks/aime/` and returns the
         last-line `summary` entry from each (in mtime-descending order).
         """
         from mtplx.benchmarks.runners import aime as aime_runner
@@ -43896,7 +43897,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--ssd-session-cache-dir",
-        default=os.environ.get("MTPLX_SSD_SESSION_CACHE_DIR", "~/.mtplx/session-bank"),
+        default=os.environ.get(
+            "MTPLX_SSD_SESSION_CACHE_DIR", str(paths.cache_dir() / "session-bank")
+        ),
         help="Directory for persistent SessionBank snapshots.",
     )
     parser.add_argument(
@@ -44203,7 +44206,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "unless MTPLX_REQUEST_LOG_CONTENT=1) as one JSON line to this "
             "path. The durable "
             "twin of the 100-entry RAM ring; scripts/session_forensics.py "
-            "reads it. Default: ON at ~/.mtplx/logs/request-log-<port>.jsonl "
+            "reads it. Default: ON at $XDG_STATE_HOME/mtplx/logs/request-log-<port>.jsonl "
             "with 64MB x4 rotation; pass 'off' (or set "
             "MTPLX_REQUEST_LOG_JSONL=off) to disable. Env: "
             "MTPLX_REQUEST_LOG_JSONL."
@@ -44217,9 +44220,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "events (tokens, TPS, reasoning/content chars, live MTP "
             "acceptance) plus postcommit outcomes, as JSONL. Feeds "
             "GET /v1/mtplx/flight and `mtplx trace`. Default: ON at "
-            "~/.mtplx/metrics/flight-<port>.jsonl with 64MB x4 rotation; "
+            "$XDG_STATE_HOME/mtplx/metrics/flight-<port>.jsonl with 64MB x4 rotation; "
             "pass 'off' or a custom path. Generated text is persisted "
-            "under ~/.mtplx/metrics/gen/ only for cancelled/errored "
+            "under $XDG_STATE_HOME/mtplx/metrics/gen/ only for cancelled/errored "
             "requests by default (MTPLX_FLIGHT_TEXT=abnormal|always|off). "
             "Env: MTPLX_FLIGHT_RECORDER."
         ),

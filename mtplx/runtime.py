@@ -32,6 +32,7 @@ from .mtp_adapters import (
     mtp_adapter_depth,
 )
 from .mtp_patch import MTPContract, inject_mtp_support, validate_mtp_support
+from mtplx import paths
 
 logger = logging.getLogger(__name__)
 
@@ -1596,7 +1597,7 @@ def _mtp_alias_load_path(path: Path, config: dict[str, Any] | None) -> Path:
     if _mlx_lm_has(model_type) or not _mlx_lm_has(base_type):
         return path
     try:
-        wrapper_root = Path.home() / ".mtplx" / "build-cache" / "mtp-alias-load"
+        wrapper_root = paths.cache_dir() / "build-cache" / "mtp-alias-load"
         digest = hashlib.sha256(
             f"{path.resolve()}::{base_type}".encode("utf-8")
         ).hexdigest()[:16]

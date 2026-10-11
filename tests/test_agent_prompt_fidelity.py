@@ -22,6 +22,7 @@ What is pinned:
 
 from __future__ import annotations
 
+import os
 import importlib.util
 import sys
 from pathlib import Path
@@ -289,7 +290,7 @@ def test_a_seam_the_model_left_does_not_cost_the_committed_turn_body(seam_in):
 # ---------------------------------------------------------------------------
 # The shipped packs (tokenizer and template only; skipped when not installed)
 # ---------------------------------------------------------------------------
-_PACK_ROOT = Path.home() / ".mtplx" / "models"
+_PACK_ROOT = Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx" / "models"
 
 
 @pytest.fixture(scope="module", params=audit.DEFAULT_PACKS)

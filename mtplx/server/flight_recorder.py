@@ -13,10 +13,10 @@ The recorder writes a compact JSONL event stream per serve port:
              streams all land here with whatever was accumulated
     pc       postcommit (idle save) outcomes between requests
 
-Default file: ~/.mtplx/metrics/flight-<port>.jsonl (rotation-cascaded like the
+Default file: $XDG_STATE_HOME/mtplx/metrics/flight-<port>.jsonl (rotation-cascaded like the
 request log). Events are numeric telemetry plus a transient in-memory tail for
 the live endpoint; full generated text is persisted separately under
-~/.mtplx/metrics/gen/ only for abnormal endings by default (the one case where
+$XDG_STATE_HOME/mtplx/metrics/gen/ only for abnormal endings by default (the one case where
 the client also loses it), controlled by MTPLX_FLIGHT_TEXT=abnormal|always|off.
 
 Threading: counters are updated from the HTTP event loop (delta/token hooks)
@@ -36,6 +36,7 @@ import time
 from collections import deque
 from typing import Any, Callable
 
+from mtplx import paths
 from mtplx import thermal_pressure
 
 _FLIGHT_LOG_MAX_BYTES = 64 * 1024 * 1024
@@ -542,7 +543,7 @@ class FlightRecorder:
 
 def resolve_flight_recorder(args: Any) -> FlightRecorder:
     """Build the process recorder from --flight-recorder / MTPLX_FLIGHT_RECORDER
-    (off|on|<path>; default ON at ~/.mtplx/metrics/flight-<port>.jsonl) and
+    (off|on|<path>; default ON at $XDG_STATE_HOME/mtplx/metrics/flight-<port>.jsonl) and
     MTPLX_FLIGHT_TEXT (abnormal|always|off; default abnormal)."""
     raw = getattr(args, "flight_recorder", None) or os.environ.get(
         "MTPLX_FLIGHT_RECORDER"
@@ -557,7 +558,7 @@ def resolve_flight_recorder(args: Any) -> FlightRecorder:
         return FlightRecorder(raw, text_mode=text_mode)
     try:
         port = int(getattr(args, "port", 0) or 0)
-        metrics_dir = os.path.join(os.path.expanduser("~"), ".mtplx", "metrics")
+        metrics_dir = str(paths.state_dir() / "metrics")
         os.makedirs(metrics_dir, exist_ok=True)
         return FlightRecorder(
             os.path.join(metrics_dir, f"flight-{port}.jsonl"), text_mode=text_mode

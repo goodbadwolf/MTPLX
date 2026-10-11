@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Callable, Iterable, Iterator
 
+from mtplx import paths
 from mtplx.artifacts import _hf_repo_id_from_ref
 from mtplx.models.laguna_config import (
     LAGUNA_S_2_1_REPO_ID,
@@ -25,7 +26,7 @@ from mtplx.models.laguna_config import (
 )
 
 
-DEFAULT_MODEL_CACHE = Path("~/.mtplx/models").expanduser()
+DEFAULT_MODEL_CACHE = paths.data_dir() / "models"
 DownloadProgressCallback = Callable[[dict[str, Any]], None]
 REQUIRED_MTPLX_MODEL_FILES = (
     "config.json",
@@ -344,7 +345,7 @@ def ensure_model_root(root: str | Path) -> Path:
 
     path = Path(root).expanduser()
     if path.is_symlink() and not path.exists():
-        # The #466 layout: ~/.mtplx/models is a symlink onto an external
+        # The #466 layout: $XDG_DATA_HOME/mtplx/models is a symlink onto an external
         # drive. Unplugged, mkdir raises FileExistsError for the link itself.
         raise RuntimeError(
             f"model directory {path} is not available: it links to "

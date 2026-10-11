@@ -11,6 +11,7 @@ encode provably matches the committed stream further than the raw one.
 
 from __future__ import annotations
 
+import os
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -19,7 +20,7 @@ import pytest
 
 from mtplx.server import openai as oa
 
-MODEL_DIR = Path.home() / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
+MODEL_DIR = Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
 
 
 def _committed_text(turns):

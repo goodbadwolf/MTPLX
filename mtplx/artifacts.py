@@ -79,6 +79,7 @@ from .profiles import (
     QWEN38_OPTIMIZED_SPEED_FP16_HF_MODEL_ID,
     QWEN38_OPTIMIZED_SPEED_FP16_PUBLIC_MODEL_ID,
 )
+from mtplx import paths
 
 MTP_KEY_PREFIXES = ("mtp.", "language_model.mtp.")
 _KNOWN_PUBLIC_MODEL_ALIASES = {
@@ -779,13 +780,13 @@ def _hf_download_cache_dir() -> Path | None:
         return None
     default = Path("~/.cache/huggingface").expanduser()
     if default.is_symlink() and not default.exists():
-        fallback = Path("~/.mtplx/hf-cache").expanduser()
+        fallback = paths.cache_dir() / "hf-cache"
         fallback.mkdir(parents=True, exist_ok=True)
         return fallback
     try:
         default.mkdir(parents=True, exist_ok=True)
     except FileExistsError:
-        fallback = Path("~/.mtplx/hf-cache").expanduser()
+        fallback = paths.cache_dir() / "hf-cache"
         fallback.mkdir(parents=True, exist_ok=True)
         return fallback
     return None

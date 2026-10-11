@@ -3,6 +3,7 @@ stay in one word) when transformers or a re-saved pack split them apart."""
 
 from __future__ import annotations
 
+import os
 import json
 from pathlib import Path
 
@@ -90,7 +91,7 @@ def test_a_correct_load_is_a_no_op(tmp_path):
     assert restore_qwen3_pretokenizer(loaded, pack, {"model_type": "qwen3_5"}) is None
 
 
-_OQ = Path.home() / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Quality"
+_OQ = Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Quality"
 
 
 @pytest.mark.skipif(not (_OQ / "tokenizer.json").exists(), reason="pack not installed")
