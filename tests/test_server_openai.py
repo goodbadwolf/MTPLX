@@ -10464,6 +10464,88 @@ def test_anthropic_bridge_forwards_reasoning_effort():
     assert openai._anthropic_to_chat_request(without).reasoning_effort is None
 
 
+def _anthropic_effort_request(**fields):
+    return openai.AnthropicMessagesRequest(
+        model="m",
+        max_tokens=16,
+        messages=[{"role": "user", "content": [{"type": "text", "text": "hi"}]}],
+        **fields,
+    )
+
+
+@pytest.mark.parametrize(
+    ("sent", "expected"),
+    [
+        ("low", "low"),
+        ("medium", "medium"),
+        ("high", "high"),
+        ("xhigh", "xhigh"),
+        ("max", "xhigh"),
+        ("none", "low"),
+    ],
+)
+def test_anthropic_bridge_maps_output_config_effort(sent, expected):
+    # Claude Code sends output_config.effort, never the flat field.
+    request = _anthropic_effort_request(output_config={"effort": sent})
+    chat = openai._anthropic_to_chat_request(request)
+    assert chat.reasoning_effort == expected
+
+
+def test_anthropic_bridge_flat_reasoning_effort_beats_output_config():
+    request = _anthropic_effort_request(
+        reasoning_effort="low", output_config={"effort": "max"}
+    )
+    assert openai._anthropic_to_chat_request(request).reasoning_effort == "low"
+
+
+@pytest.mark.parametrize(
+    "output_config",
+    [None, {}, {"effort": "ultra"}, {"effort": 3}, {"effort": None}, "high", ["high"]],
+)
+def test_anthropic_bridge_ignores_absent_or_unknown_output_config(output_config):
+    fields = {} if output_config is None else {"output_config": output_config}
+    chat = openai._anthropic_to_chat_request(_anthropic_effort_request(**fields))
+    assert chat.reasoning_effort is None
+
+
+FLASH_NEXT_TEMPLATE = Path.home() / ".config/llama-templates/qwen3.8-flash-next.jinja"
+
+
+@pytest.mark.skipif(
+    not FLASH_NEXT_TEMPLATE.is_file(), reason="Flash Next chat template not installed"
+)
+def test_anthropic_output_config_effort_reaches_flash_next_template():
+    jinja2 = pytest.importorskip("jinja2")
+    env = jinja2.Environment()
+
+    def raise_exception(message):
+        raise jinja2.TemplateError(message)
+
+    env.globals["raise_exception"] = raise_exception
+    template = env.from_string(FLASH_NEXT_TEMPLATE.read_text())
+
+    def render(effort):
+        chat = openai._anthropic_to_chat_request(
+            _anthropic_effort_request(output_config={"effort": effort})
+        )
+        kwargs = {"reasoning_effort": chat.reasoning_effort} if chat.reasoning_effort else {}
+        return template.render(
+            messages=[
+                {"role": "system", "content": "You are helpful."},
+                {"role": "user", "content": "hi"},
+            ],
+            add_generation_prompt=True,
+            enable_thinking=True,
+            **kwargs,
+        )
+
+    low, high, xhigh, max_ = (render(e) for e in ("low", "high", "xhigh", "max"))
+    assert "Reasoning effort is set to low" in low
+    assert "Reasoning effort is set to xhigh" in xhigh
+    assert low != xhigh
+    assert high == xhigh == max_
+
+
 def test_cancel_attribution_first_origin_wins_and_labels():
     # #381: one shared cancel event, many setters — the terminal frame
     # blamed every non-disconnect trip on POST /v1/mtplx/cancel. The first
