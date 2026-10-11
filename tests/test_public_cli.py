@@ -8583,7 +8583,7 @@ def test_max_status_command_is_no_mlx_stable(monkeypatch, capsys):
 
     thermal.detect_thermal_control.cache_clear()
     # Must mock both lookups: detect_thermal_control checks
-    # ``~/.mtplx/bin/thermalforge`` first via ``_find_thermalforge`` so a
+    # ``$XDG_DATA_HOME/mtplx/bin/thermalforge`` first via ``_find_thermalforge`` so a
     # real install on the dev machine would otherwise leak in.
     monkeypatch.setattr(thermal, "_find_thermalforge", lambda: None)
     monkeypatch.setattr(thermal.shutil, "which", lambda _name: None)

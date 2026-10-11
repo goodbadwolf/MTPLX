@@ -767,12 +767,13 @@ FAILED_START_MAX_AGE_DAYS = 14
 
 def failed_start_report_path() -> Path:
     """Where the app writes a failed start's output (SYNC PAIR:
-    ``StartFailureReport.defaultURL`` in the app). The override exists so the
+    ``StartFailureReport.defaultURL`` in the app, which uses a fixed home
+    dotdir, so the two only meet under MTPLX_HOME). The override exists so the
     test suite never reads a developer's real file."""
     override = os.environ.get("MTPLX_START_FAILURE_REPORT")
     if override and override.strip():
         return Path(override).expanduser()
-    return Path.home() / ".mtplx" / "logs" / "last-failed-start.log"
+    return paths.state_dir() / "logs" / "last-failed-start.log"
 
 
 def last_failed_start_check() -> DiagnosticCheck:

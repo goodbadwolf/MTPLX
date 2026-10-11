@@ -44,5 +44,5 @@ def cache_dir() -> Path:
 
 
 def data_dir() -> Path:
-    """models/, hf-upload/."""
+    """models/, hf-upload/, bin/thermalforge, build/ThermalForge."""
     return _legacy_home() or _xdg_root("XDG_DATA_HOME", ".local/share")

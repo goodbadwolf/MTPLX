@@ -33,8 +33,15 @@ probes = {
     "tuning": ("mtplx.commands.public", "TUNE_STATE_PATH"),
     "history": ("mtplx.commands.public", "CHAT_HISTORY_PATH"),
     "forge_models": ("mtplx.default_models", "_MODELS"),
+    "thermalforge_dir": ("mtplx.thermal", "MTPLX_THERMALFORGE_DIR"),
+    "thermalforge_build": ("mtplx.thermal", "THERMALFORGE_BUILD_DIR"),
+    "max_marker": ("mtplx.thermal", "MAX_MARKER_FILE"),
 }
-print(json.dumps({k: str(getattr(importlib.import_module(m), a)) for k, (m, a) in probes.items()}))
+found = {k: str(getattr(importlib.import_module(m), a)) for k, (m, a) in probes.items()}
+from mtplx import thermal
+with thermal._max_marker_lock():
+    pass
+print(json.dumps(found))
 """
 
 
@@ -131,6 +138,11 @@ def test_import_time_defaults_follow_xdg(xdg_env):
     assert found["aime"] == state / "benchmarks" / "aime"
     assert found["tuning"] == state / "tuning.json"
     assert found["history"] == state / "history"
+    assert found["thermalforge_dir"] == data / "bin"
+    assert Path(found["thermalforge_build"]) == data / "build" / "ThermalForge"
+    assert found["max_marker"] == state / "max-active.json"
+    assert (state / "max-active.json.lock").is_file()
+    assert not (xdg_env.home / ".mtplx").exists()
 
 
 def test_import_time_defaults_follow_mtplx_home(tmp_path):
@@ -148,6 +160,11 @@ def test_import_time_defaults_follow_mtplx_home(tmp_path):
     assert found["aime"] == legacy / "benchmarks" / "aime"
     assert found["tuning"] == legacy / "tuning.json"
     assert found["history"] == legacy / "history"
+    assert found["thermalforge_dir"] == legacy / "bin"
+    assert Path(found["thermalforge_build"]) == legacy / "build" / "ThermalForge"
+    assert found["max_marker"] == legacy / "max-active.json"
+    assert (legacy / "max-active.json.lock").is_file()
+    assert not (home / ".mtplx").exists()
 
 
 def test_cli_config_defaults_follow_xdg(xdg_env):
@@ -175,7 +192,7 @@ def test_explicit_overrides_still_beat_the_defaults(xdg_env, monkeypatch, tmp_pa
 
 
 def test_default_path_functions_never_create_a_dotdir_in_home(xdg_env, monkeypatch):
-    from mtplx import thermal_sidecar
+    from mtplx import diagnostics, thermal_sidecar
     from mtplx.commands import forge
 
     monkeypatch.delenv("MTPLX_REQUEST_LOG_JSONL", raising=False)
@@ -183,6 +200,7 @@ def test_default_path_functions_never_create_a_dotdir_in_home(xdg_env, monkeypat
     monkeypatch.delenv("MTPLX_FORGE_CANCEL_DIR", raising=False)
     monkeypatch.delenv("MTPLX_FORGE_MODEL_ROOT", raising=False)
     monkeypatch.delenv("MTPLX_MODEL_DIR", raising=False)
+    monkeypatch.delenv("MTPLX_START_FAILURE_REPORT", raising=False)
     roots = {name: root / "mtplx" for name, root in xdg_env.roots.items()}
 
     state = SimpleNamespace(args=SimpleNamespace(port=8123))
@@ -199,6 +217,9 @@ def test_default_path_functions_never_create_a_dotdir_in_home(xdg_env, monkeypat
         roots["XDG_STATE_HOME"] / "forge-cancel" / "run1.json"
     )
     assert forge._default_model_root() == roots["XDG_DATA_HOME"] / "models"
+    assert diagnostics.failed_start_report_path() == (
+        roots["XDG_STATE_HOME"] / "logs" / "last-failed-start.log"
+    )
     assert paths.config_dir() / "api-key" == roots["XDG_CONFIG_HOME"] / "api-key"
 
     assert not (xdg_env.home / ".mtplx").exists()
@@ -207,20 +228,13 @@ def test_default_path_functions_never_create_a_dotdir_in_home(xdg_env, monkeypat
 
 _LITERAL = re.compile(r"""(?<=["'/])\.mtplx(?![\w-])""")
 
-# ThermalForge's binary and build dir, and the max-active marker, stay under
-# the home dotdir: the macOS app and the sudoers rule pin those absolute paths.
-_PINNED_FILES = {Path("mtplx/paths.py"), Path("mtplx/thermal.py")}
-# The macOS app writes the failed-start report there, and `mtplx doctor` reads it.
-_PINNED_LINES = ("last-failed-start", "bin/thermalforge")
-
-
-def test_no_hardcoded_dotdir_literal_outside_the_pinned_paths():
+def test_no_hardcoded_dotdir_literal_outside_paths_module():
     offenders = []
     for source in sorted((REPO_ROOT / "mtplx").rglob("*.py")):
         relative = source.relative_to(REPO_ROOT)
-        if relative in _PINNED_FILES:
+        if relative == Path("mtplx/paths.py"):
             continue
         for number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
-            if _LITERAL.search(line) and not any(tag in line for tag in _PINNED_LINES):
+            if _LITERAL.search(line):
                 offenders.append(f"{relative}:{number}: {line.strip()}")
     assert offenders == []

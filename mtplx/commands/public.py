@@ -4789,7 +4789,7 @@ def _parse_powermetrics_text(text: str) -> dict[str, Any]:
 
 
 def _thermalforge_binary() -> str | None:
-    owned = Path("~/.mtplx/bin/thermalforge").expanduser()
+    owned = paths.data_dir() / "bin" / "thermalforge"
     if owned.exists():
         return str(owned)
     return shutil.which("thermalforge")
