@@ -10508,7 +10508,10 @@ def test_anthropic_bridge_ignores_absent_or_unknown_output_config(output_config)
     assert chat.reasoning_effort is None
 
 
-FLASH_NEXT_TEMPLATE = Path.home() / ".config/llama-templates/qwen3.8-flash-next.jinja"
+FLASH_NEXT_TEMPLATE = (
+    Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home())
+    / ".config/llama-templates/qwen3.8-flash-next.jinja"
+)
 
 
 @pytest.mark.skipif(
