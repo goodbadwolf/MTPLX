@@ -9,13 +9,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+from mtplx import paths
 from mtplx.constants import DEFAULT_RUNTIME_MODEL_DIR
 from mtplx.default_models import is_verified_default_model_ref
 from mtplx.profiles import DEFAULT_HF_MODEL_ID, DEFAULT_MODEL_ID, DEFAULT_PROFILE_NAME, resolve_profile_name
 from mtplx.runtime_options import normalize_paged_kv_quantization
 
 
-DEFAULT_CONFIG_PATH = Path("~/.mtplx/config.toml").expanduser()
+DEFAULT_CONFIG_PATH = paths.config_dir() / "config.toml"
 RUNTIME_MODEL_COMMANDS = {"ask", "run", "chat", "start", "serve", "quickstart", "quick-start", "tune"}
 CACHE_COMMANDS = {"pull", "list", "models", "remove"}
 # Two default repo ids that early `mtplx init` builds wrote into config.toml:

@@ -14,7 +14,7 @@ Owns a single in-process state machine that:
    channel.
 5. Grades the captured answer text via
    :mod:`mtplx.benchmarks.validators.aime` and persists per-question rows
-   to ``~/.mtplx/benchmarks/aime/<run_id>.jsonl``.
+   to ``$XDG_STATE_HOME/mtplx/benchmarks/aime/<run_id>.jsonl``.
 
 State machine
 -------------
@@ -63,6 +63,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from mtplx import paths
 from mtplx.benchmarks.validators.aime import GradeStatus, extract_boxed, grade
 
 
@@ -119,7 +120,7 @@ PROGRESS_TRACE_MILESTONES: tuple[tuple[str, int], ...] = (
 DEFAULT_DATASET_PATH: Path = (
     Path(__file__).resolve().parents[1] / "prompts" / "aime_2026.jsonl"
 )
-DEFAULT_PERSIST_DIR: Path = Path.home() / ".mtplx" / "benchmarks" / "aime"
+DEFAULT_PERSIST_DIR: Path = paths.state_dir() / "benchmarks" / "aime"
 ANSWER_COMMIT_MARKER: str = "candidate_answer"
 VERIFIED_ANSWER_MARKERS: tuple[str, ...] = (
     "verified_answer",

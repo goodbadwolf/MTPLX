@@ -28,6 +28,7 @@ from .profiles import (
 from .reasoning_effort import REASONING_EFFORT_CHOICES
 from .runtime_options import canonicalize_flag_tokens, normalize_paged_kv_quantization
 from .version import DISPLAY_VERSION, __version__
+from mtplx import paths
 
 # Help/usage advertises only the canonical profiles; the parser itself
 # resolves through resolve_profile_name so historical aliases that
@@ -2460,7 +2461,9 @@ def build_parser() -> argparse.ArgumentParser:
     setup_p = sub.add_parser(
         "setup", help="Set up MTPLX with a friendly guided default"
     )
-    setup_p.add_argument("--config", default="~/.mtplx/config.toml")
+    setup_p.add_argument(
+        "--config", default=str(paths.config_dir() / "config.toml")
+    )
     setup_p.add_argument(
         "--model",
         default=DEFAULT_HF_MODEL_ID,
@@ -2468,7 +2471,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     setup_p.add_argument(
         "--model-dir",
-        help="Model cache directory; defaults to MTPLX_MODEL_DIR or ~/.mtplx/models",
+        help="Model cache directory; defaults to MTPLX_MODEL_DIR or $XDG_DATA_HOME/mtplx/models",
     )
     _add_model_search_dir_args(setup_p)
     setup_p.add_argument(
@@ -2539,7 +2542,7 @@ def build_parser() -> argparse.ArgumentParser:
     gc_p.add_argument(
         "--dir",
         default=None,
-        help="SessionBank directory (default: ~/.mtplx/session-bank)",
+        help="SessionBank directory (default: $XDG_CACHE_HOME/mtplx/session-bank)",
     )
     gc_p.add_argument(
         "--apply",
@@ -2674,7 +2677,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Bind address. Default 127.0.0.1 is this Mac only; 0.0.0.0 shares "
             "the API with other devices and VM guests (requires an API key — "
-            "add --api-key-file ~/.mtplx/api-key to generate one)"
+            "add --api-key-file $XDG_CONFIG_HOME/mtplx/api-key to generate one)"
         ),
     )
     quickstart_server_p.add_argument("--port", type=int, default=8000)
@@ -2987,7 +2990,7 @@ def build_parser() -> argparse.ArgumentParser:
     doctor_p.add_argument(
         "--bundle",
         action="store_true",
-        help="Write a redacted doctor bundle under ~/.mtplx/reports",
+        help="Write a redacted doctor bundle under $XDG_STATE_HOME/mtplx/reports",
     )
     doctor_p.add_argument("--output-dir", help="Directory for --bundle output")
     doctor_p.add_argument(
@@ -3256,7 +3259,7 @@ def build_parser() -> argparse.ArgumentParser:
     trace_report_p.add_argument(
         "--out",
         default=None,
-        help="output HTML path (default: ~/.mtplx/metrics/reports/<ses>.html)",
+        help="output HTML path (default: $XDG_STATE_HOME/mtplx/metrics/reports/<ses>.html)",
     )
     trace_report_p.add_argument(
         "--open", action="store_true", help="open in browser when written"
@@ -3425,7 +3428,9 @@ def build_parser() -> argparse.ArgumentParser:
     init_p = sub.add_parser(
         "init", help="Initialize MTPLX user config without importing MLX"
     )
-    init_p.add_argument("--config", default="~/.mtplx/config.toml")
+    init_p.add_argument(
+        "--config", default=str(paths.config_dir() / "config.toml")
+    )
     init_p.add_argument(
         "--model",
         default=DEFAULT_HF_MODEL_ID,
@@ -3433,7 +3438,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     init_p.add_argument(
         "--model-dir",
-        help="Model cache directory; defaults to MTPLX_MODEL_DIR or ~/.mtplx/models",
+        help="Model cache directory; defaults to MTPLX_MODEL_DIR or $XDG_DATA_HOME/mtplx/models",
     )
     _add_model_search_dir_args(init_p)
     init_p.add_argument(
@@ -3653,7 +3658,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Bind address. Default 127.0.0.1 is this Mac only; 0.0.0.0 shares "
             "the API with other devices and VM guests (requires an API key — "
-            "add --api-key-file ~/.mtplx/api-key to generate one)"
+            "add --api-key-file $XDG_CONFIG_HOME/mtplx/api-key to generate one)"
         ),
     )
     serve_p.add_argument("--port", type=int, default=8000)

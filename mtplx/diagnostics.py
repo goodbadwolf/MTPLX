@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+from mtplx import paths
 from mtplx.hf_loader import (
     cached_model_path,
     model_library_roots,
@@ -871,7 +872,7 @@ def write_doctor_bundle(
     output_dir: str | Path | None = None,
     include_paths: bool = False,
 ) -> dict[str, Any]:
-    base = Path(output_dir or "~/.mtplx/reports").expanduser()
+    base = Path(output_dir or paths.state_dir() / "reports").expanduser()
     bundle_id = f"doctor-{time.strftime('%Y%m%d-%H%M%S')}"
     root = base / bundle_id
     root.mkdir(parents=True, exist_ok=True)

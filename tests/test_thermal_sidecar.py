@@ -28,15 +28,17 @@ def _default_no_daemon_socket(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _scratch_home_and_verified_fans(monkeypatch, tmp_path):
-    """Keep the sidecar log under a scratch HOME (never the real ~/.mtplx) and
+    """Keep the sidecar log under a scratch HOME (never the real state dir) and
     default fan verification to "fans report auto" so no test reads the real
     fan controller. Tests about unverified restores override it."""
     monkeypatch.setenv("HOME", str(tmp_path))
+    for name in ("MTPLX_HOME", "XDG_STATE_HOME"):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(thermal_sidecar, "wait_for_auto_fans", lambda **k: True)
 
 
 def _sidecar_log(tmp_path) -> str:
-    path = tmp_path / ".mtplx" / "logs" / "thermal-sidecar.log"
+    path = tmp_path / ".local" / "state" / "mtplx" / "logs" / "thermal-sidecar.log"
     return path.read_text() if path.exists() else ""
 
 

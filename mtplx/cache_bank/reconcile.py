@@ -45,8 +45,9 @@ from contextlib import AbstractContextManager, nullcontext
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
+from mtplx import paths
 
-DEFAULT_COLD_TIER_DIR = Path("~/.mtplx/session-bank").expanduser()
+DEFAULT_COLD_TIER_DIR = paths.cache_dir() / "session-bank"
 MANIFEST_FILENAME = "manifest.sqlite"
 # The walk yields to the caller's foreground hook every this many files
 # (same cadence as the tier's blob writes).

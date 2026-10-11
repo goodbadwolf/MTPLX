@@ -2,7 +2,7 @@
 
 Three screens for first-time users (model -> mode -> interface/client), and a
 "same as last time?" prompt for returning users. Choices persist to
-``~/.mtplx/quickstart.json`` so the next run can offer the same defaults.
+``$XDG_STATE_HOME/mtplx/quickstart.json`` so the next run can offer the same defaults.
 
 The module gracefully degrades to plain stdlib ``print`` and ``input`` when
 ``rich`` is not available, so the onboarding works even in minimal venvs.
@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+from mtplx import paths
 from mtplx.constants import (
     EXPECTED_ALL_PREQUANTIZED_MTP_KEYS,
     EXPECTED_MTP_KEYS,
@@ -43,7 +44,7 @@ from mtplx.model_catalog import LEGACY_TIER, chip_tier_for_generation, recommend
 from mtplx.server_urls import bind_label, is_wildcard_bind, local_url_for_bind
 
 DEFAULT_HF_MODEL = DEFAULT_HF_MODEL_ID
-STATE_PATH = Path("~/.mtplx/quickstart.json").expanduser()
+STATE_PATH = paths.state_dir() / "quickstart.json"
 # Persisted-state sentinel for "engine decides": no --profile is stamped
 # anywhere, so serve-time per-model resolution stays live (Turbo for the
 # quantized flagships, Sustained otherwise). Never a real profile name.

@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from mtplx import paths
 from mtplx import artifacts
 from mtplx.artifacts import inspect_model, text_config
 from mtplx.benchmarks.validators.basic import summarize_benchmark_quality
@@ -4230,7 +4231,9 @@ def _cmd_cancel(args: Any) -> int:
 
 
 def _cancel_marker(run_id: str) -> Path:
-    root = Path(os.environ.get("MTPLX_FORGE_CANCEL_DIR", "~/.mtplx/forge-cancel")).expanduser()
+    root = Path(
+        os.environ.get("MTPLX_FORGE_CANCEL_DIR", str(paths.state_dir() / "forge-cancel"))
+    ).expanduser()
     return root / f"{run_id}.json"
 
 
@@ -4271,7 +4274,7 @@ def _default_model_root(model_root: str | Path | None = None) -> Path:
     research_models = Path("~/Documents/MTPLX/models").expanduser()
     if research_models.exists():
         return research_models
-    return Path("~/.mtplx/models").expanduser()
+    return paths.data_dir() / "models"
 
 
 def _unique_model_dir(

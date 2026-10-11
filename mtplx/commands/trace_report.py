@@ -747,7 +747,7 @@ _JS = (
 def cmd_trace_report(args: argparse.Namespace) -> int:
     port = _source_port(args)
     if port is None:
-        print("no request logs found under ~/.mtplx/logs", file=sys.stderr)
+        print("no request logs found under $XDG_STATE_HOME/mtplx/logs", file=sys.stderr)
         return 1
     receipts = _load_receipts(port, path=getattr(args, "request_log", None))
     flight = _load_flight(port, path=getattr(args, "flight_log", None))
