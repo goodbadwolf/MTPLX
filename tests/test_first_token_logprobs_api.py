@@ -10,6 +10,7 @@ harness), so the result-dict plumbing is exercised end to end.
 
 from __future__ import annotations
 
+import os
 import dataclasses
 import json
 from pathlib import Path
@@ -521,7 +522,7 @@ def test_unread_decoders_report_null():
     assert openai._token_bytes_reader(tokenizer)(token) is None
 
 
-MODELS = Path.home() / ".mtplx/models"
+MODELS = Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx/models"
 
 
 @pytest.mark.parametrize(

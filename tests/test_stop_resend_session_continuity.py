@@ -35,6 +35,7 @@ Everything here runs on the fake streaming session state: no model, CPU only.
 
 from __future__ import annotations
 
+import os
 import asyncio
 import json
 import threading
@@ -621,7 +622,7 @@ def test_a_cancelled_finish_is_never_a_commit():
 
 # --- The same three turns through the real chat template ---------------------
 
-MODEL_DIR = Path.home() / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
+MODEL_DIR = Path(os.environ.get("MTPLX_SUITE_REAL_HOME") or Path.home()) / ".mtplx/models/Qwen3.8-27B-MTPLX-Optimized-Speed"
 
 
 def _reach(record: dict) -> int:
